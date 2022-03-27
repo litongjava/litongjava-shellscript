@@ -1,8 +1,10 @@
 #!/bin/sh
 # chkconfig: 345 99 01
-# description: spring-boot-app
+# description:jeesite
 
-##############################
+##########################
+# get app home start
+###########################
 PRG="$0"
 while [ -h "$PRG" ] ; do
   ls=`ls -ld "$PRG"`
@@ -13,25 +15,35 @@ while [ -h "$PRG" ] ; do
     PRG=`dirname "$PRG"`/"$link"
   fi
 done
-#############################
+##########################
+# get app home end
+###########################
+
 ##########################
 # custom variables start
 ###########################
-
-if [ 0"$JAVA_HOME" = "0" ]; then
-  JAVA_HOME=/usr/java/jdk1.8.0_211
-fi
-
 APP_HOME=`dirname "$PRG"`
 APP_NAME=`basename "$PRG"`
-PID_FILE=$APP_HOME/$APP_NAME.pid
 
-OOM="-XX:+HeapDumpOnOutOfMemoryError"
-#JAVA_OPTS="-Xdebug -Xrunjdwp:server=y,transport=dt_socket,suspend=n"
-CP="$APP_HOME/lib/*:$APP_HOME/config:$APP_HOME/static"
-MAIN_CLASS="com.litong.spring.boot.video.player.Application"
-MAIN_ARGS="--spring.profiles.active=online"
-CMD="$JAVA_HOME/bin/java -Xverify:none $JAVA_OPTS -cp $CP $MAIN_CLASS $MAIN_ARGS"
+#JAVA_HOME=/usr/java/jdk1.8.0_211
+if [ -z "$JAVA_HOME" ]; then
+  RUN_JAVA=java
+else
+  RUN_JAVA="$JAVA_HOME"/bin/java
+fi
+
+PID_FILE=$APP_HOME/$APP_NAME.pid
+CP=$APP_HOME
+
+# 启动入口类，该脚本文件用于别的项目时要改这里
+MAIN_CLASS=org.springframework.boot.loader.WarLauncher
+# Java 命令行参数，根据需要开启下面的配置，改成自己需要的，注意等号前后不能有空格
+# JAVA_OPTS="-Xms256m -Xmx1024m -Dundertow.port=80 -Dundertow.host=0.0.0.0"
+# JAVA_OPTS="-Dundertow.port=80 -Dundertow.host=0.0.0.0"
+CMD="$RUN_JAVA -Xverify:none ${JAVA_OPTS} -cp ${CP} ${MAIN_CLASS}"
+
+lock_dir=/var/lock/subsys
+lock_file=$lock_dir/$APP_NAME
 ###########################
 # custom variables end
 ###########################
@@ -39,15 +51,14 @@ CMD="$JAVA_HOME/bin/java -Xverify:none $JAVA_OPTS -cp $CP $MAIN_CLASS $MAIN_ARGS
 #########################
 # define funcation start
 ##########################
-lock_dir=/var/lock/subsys
-lock_file=$lock_dir/$APP_NAME
+
 createLockFile(){
-    [ -w $lock_dir ] && touch $lock_file
+  [ -w $lock_dir ] && touch $lock_file
 }
 
-start (){
+start(){
   [ -e $APP_HOME/logs ] || mkdir $APP_HOME/logs -p
-
+  
   if [ -f $PID_FILE ]
   then
     echo 'alread running...'
@@ -56,9 +67,8 @@ start (){
     nohup $CMD >> $APP_HOME/logs/$APP_NAME.log 2>&1 &
     echo $! > $PID_FILE
     createLockFile
-    echo "[start success]"
+    echo "[Start OK]"
   fi
-
 }
 
 stop(){
@@ -66,7 +76,7 @@ stop(){
   then
     kill `cat $PID_FILE`
     rm -f $PID_FILE
-    echo "[stop success]"
+    echo "[Stop OK]"
   else
     echo 'not running...'
   fi
@@ -78,13 +88,9 @@ restart(){
 }
 
 status(){
-  if [ -f $PID_FILE ]
-  then
-    cat $PID_FILE
-  else
-    echo 'not running...'
-  fi
+  cat $PID_FILE
 }
+
 
 ##########################
 # define function end
@@ -105,5 +111,6 @@ case $ACTION in
     ;;
   *)
     echo usage "{start|stop|restart|status}"
-  ;;
+    ;;
 esac
+
