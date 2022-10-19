@@ -1,19 +1,12 @@
 #!/bin/sh
-
 #chkconfig:2345 85 14
 #description:spring-boot
-#author litong
-# 启动spring-boot项目
+#author litongjava
+# 启动spring-boot项目,
+# 本脚本适用于 使用独立的jar文件并且配置文件也在jar中,
 
 ##################################
-# define variable stop
-##################################
-APP_NAME=spring-boot
-
-##################################
-# define variable stop
-##################################
-
+# get app home
 PRG="$0"
 while [ -h "$0" ] ; do
   ls=`ls -ld "$PRG"`
@@ -25,18 +18,24 @@ while [ -h "$0" ] ; do
   fi
 done
 APP_HOME=`dirname "$PRG"`
+##################################
 
+##################################
+# define variable
+APP_NAME=spring-boot
 CONFIG_FILE=$APP_HOME/application.properties
+BOOT_ARGS="-Dspring.config.location=$CONFIG_FILE"
+PID_FILE=$APP_HOME/$APP_NAME.pid
 #如果系统中不存在java_home,手动指定java_home
 if [ 0"$JAVA_HOME" = "0" ]; then
   JAVA_HOME=/usr/java/jdk1.8.0_211
 fi
-
-
-PID_FILE=$APP_HOME/$APP_NAME.pid
 JAVA=$JAVA_HOME/bin/java
-JAVA_OPTS="-jar"
+
+VM_ARGS="-Djasypt.encryptor.password="
+JAVA_OPTS="$VM_ARGS -jar"
 RETVAL=0
+##################################
 
 ################################
 # define function start
@@ -54,13 +53,15 @@ createLockFile(){
 }
 
 start(){
+  [ -e $APP_HOME/logs ] || mkdir $APP_HOME/logs -p
+
   if [ -f $PID_FILE ]
   then 
     echo "$PID_FILE file exists, process already running,the pid file is $(cat $PID_FILE)"
   else
     createLockFile
-	CMD="$JAVA $JAVA_OPTS *.jar -Dspring.config.location=$CONFIG_FILE"
-	echo "$CMD >> $APP_HOME/logs/$APP_NAME.log"
+	  CMD="$JAVA $JAVA_OPTS $APP_HOME/*.jar $BOOT_ARGS"
+	  echo "$CMD >> $APP_HOME/logs/$APP_NAME.log"
     nohup $CMD >> $APP_HOME/logs/$APP_NAME.log 2>&1 &
     # $! 获取最后一个进程的id,先执行nohup命令,在执行 java命令,获取到的是java命令的pid
     RETVAL=$!
