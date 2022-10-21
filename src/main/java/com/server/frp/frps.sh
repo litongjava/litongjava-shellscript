@@ -1,6 +1,6 @@
 #!/bin/sh
 #chkconfig:345 98 02
-#description:knity.sh
+#description:fps.sh
 
 ###########################
 # custom variables start
@@ -8,7 +8,7 @@
 APP_HOME=/opt/frp
 APP_NAME=frp
 PID_FILE=/var/run/$APP_NAME.pid
-CMD="$APP_HOME/frps -c $APP_HOME/frps.ini >> /var/log/frps.log"
+CMD="$APP_HOME/frps -c $APP_HOME/frps.ini"
 
 ###########################
 # custom variables end
@@ -62,19 +62,19 @@ status(){
 ##########################
 ACTION=$1
 case $ACTION in
-	start)
-		start
-		;;
-	stop)
-		stop
-		;;
-	restart)
-		restart
-		;;
-	status)
-		status
-		;;
-	*)
-		echo usage "{start|stop|restart|status}"
-	;;
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    restart
+    ;;
+  status)
+    status
+    ;;
+  *)
+    echo usage "{start|stop|restart|status}"
+  ;;
 esac
