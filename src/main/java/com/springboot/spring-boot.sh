@@ -41,8 +41,6 @@ RETVAL=0
 # define function start
 ################################
 
-. /etc/init.d/functions
-
 createLockFile(){
   lock_dir=/var/lock/subsys
   lock_file_path=$lock_dir/$APP_NAME
@@ -73,7 +71,7 @@ start(){
 stop(){
   if [ -f $PID_FILE ]
   then
-    killproc -p $PID_FILE
+    kill `cat $PID_FILE`
     rm -rf $PID_FILE
   else
     echo "$PID_FILE is not exists,process is not running"
